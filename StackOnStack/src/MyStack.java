@@ -46,7 +46,7 @@ public class MyStack {
       String[] links = result.split("href=");
       System.out.println();
       System.out.println();
-      System.out.println(links[2]);
+      System.out.println(links[1]);
 //      for(int i=0;i<links.length;i++) {
 //    	  links[i] = links[i].substring(1);
 //    	  links[i] = links[i].substring(0, links[i].lastIndexOf("\""));
@@ -92,7 +92,7 @@ public class MyStack {
 			parent = parent.getChainNode();
 		}
 	}
-	public void removeChild(int value) {
+	public void killChild(int value) {
 		Node parent = getParent(value);
 		if(parent.getChainNode()== null) {
 			System.out.println("No child");
