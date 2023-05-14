@@ -10,15 +10,15 @@ import java.util.regex.Pattern;
 public class Main {
 
     private static String[] arr = new String[300];
-    private static int CSS = 1;
-    private static int JAVASCRIPT = 2;
+    private static final int CSS = 1;
+    private static final int JAVASCRIPT = 2;
+
     public static void main(String[] args) {
         String webContent = getWebContent("https://www.msn.com/id-id");
         //Remove the CSS tag
         webContent = removeTags(webContent, CSS);
         //Remove the JavaScript code
         webContent = removeTags(webContent, JAVASCRIPT);
-        String holder = "";
         //Print the content of the webpage
         ArrayList<String> listOfLinks = getLinks(webContent);
         System.out.println();
@@ -45,7 +45,7 @@ public class Main {
     }
 
     private static String removeTags(String content, int tag) {
-        String tagPattern = null;
+        String tagPattern;
         if(tag == 1) {
             tagPattern = "<style[^>]*>[^<]*</style>";
         } else {
@@ -73,31 +73,42 @@ public class Main {
 
         URLConnection urlConnection = null;
         try {
-            urlConnection = newURL.openConnection();
+            if (newURL != null) {
+                urlConnection = newURL.openConnection();
+            }
         } catch(IOException ioException) {
             System.err.println("Unable to estabilish connection!");
             return null;
         }
 
-        urlConnection.setRequestProperty(
-                "User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
-        );
+        if (urlConnection != null) {
+            urlConnection.setRequestProperty(
+                    "User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+            );
+        }
 
         Scanner reader = null;
         try {
-            reader = new Scanner(urlConnection.getInputStream());
+            if (urlConnection != null) {
+                reader = new Scanner(urlConnection.getInputStream());
+            }
         } catch(IOException ioException) {
             System.err.println("Unable to get input stream!");
             return null;
         }
+
         String inputLine;
         StringBuilder content = new StringBuilder();
-        while((inputLine = reader.nextLine()) != null && reader.hasNextLine()) {
-            content.append(inputLine);
-            content.append("\n");
+        if (reader != null) {
+            while((inputLine = reader.nextLine()) != null && reader.hasNextLine()) {
+                content.append(inputLine);
+                content.append("\n");
+            }
         }
-        reader.close();
+        if (reader != null) {
+            reader.close();
+        }
         return content.toString();
     }
 
