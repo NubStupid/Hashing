@@ -1,3 +1,6 @@
+import node.Node;
+import node.NodeArray;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -9,16 +12,15 @@ import java.util.regex.Pattern;
 
 public class Main {
 
-    private static String[] arr = new String[300];
-    private static final int CSS = 1;
-    private static final int JAVASCRIPT = 2;
+    private static NodeArray<String> arrayTable = new NodeArray<>(300);
+    private static int lastAccessed = 0;
 
     public static void main(String[] args) {
         String webContent = getWebContent("https://www.msn.com/id-id");
         //Remove the CSS tag
-        webContent = removeTags(webContent, CSS);
+        webContent = removeTags(webContent, "<style[^>]*>[^<]*</style>");
         //Remove the JavaScript code
-        webContent = removeTags(webContent, JAVASCRIPT);
+        webContent = removeTags(webContent, "<script[^>]*>[^<]*</script>");
         //Print the content of the webpage
         ArrayList<String> listOfLinks = getLinks(webContent);
         System.out.println();
@@ -27,30 +29,61 @@ public class Main {
         System.out.println("Link yang didapat ada : " + listOfLinks.size() + " link");
         System.out.println("Link yang didapat : ");
         for(int i = 0; i < listOfLinks.size(); i++) {
-            System.out.println(i + ". " + listOfLinks.get(i));
+            String formedLink = "https://" + "www.msn.com" + listOfLinks.get(i);
+            System.out.printf("%d. %s\n", i + 1, formedLink);
         }
 
-        int linkNumber = 15;
-        System.out.printf("Parsing link yang ke %d, dengan url : %s\n", linkNumber, listOfLinks.get(linkNumber));
-        System.out.println();
-        String content = getWebContent(listOfLinks.get(linkNumber));
-        content = removeTags(content, CSS);
-        content = removeTags(content, JAVASCRIPT);
+        int counter = 1;
+        String currentLink = "https://msn.com";
+        for(String link : listOfLinks) {
+            currentLink += link;
+            System.out.printf("Parsing link yang ke %d, dengan url : https://www.msn.com%s\n", counter, link);
+            System.out.println();
+            String content = getWebContent(link);
+            content = removeTags(content, "<style[^>]*>[^<]*</style>");
+            content = removeTags(content, "<script[^>]*>[^<]*</script>");
+            content = removeTags(content, "<a[^>]*>(.*?)</a>");
+            content = replacePattern(content, "<em>|</em>", "");
+            content = replacePattern(content, "<span>|</span>", "");
+            content = replacePattern(content, "<strong>|</strong>", "");
+            content = removeTags(content, "");
 
-        ArrayList<String> paragraphs = extractParagraph(content);
-
-        for(int i = 1; i < paragraphs.size(); i++) {
-            System.out.println(paragraphs.get(i));
+            ArrayList<String> paragraphs = extractParagraph(content);
+            String[] arrOfWords;
+            for (int i = 1; i < paragraphs.size(); i++) {
+                arrOfWords = paragraphs.get(i).split(" ");
+                for (String arrOfWord : arrOfWords) {
+                    insertInto(arrOfWord, currentLink);
+                }
+            }
+            counter++;
         }
+
+        try {
+            arrayTable.show("apa");
+        } catch(Exception e) {
+            System.err.println("ERROR!");
+            e.printStackTrace();
+        }
+
+
+
+        /*
+        NodeArray<String> testArr = new NodeArray<>(10);
+        String word = "(<d";
+        String nama = "22d";
+        int wordHash = arrayTable.getHashCode(word, 10);
+        int namaHash = arrayTable.getHashCode(nama, 10);
+        testArr.insertNode(wordHash, new Node<>(word, "halo"));
+        testArr.insertNode(namaHash, new Node<>(nama, "halo"));
+
+        System.out.println(testArr.getNodeFromKey("(<d", 10).getWord());
+        testArr.showAll(testArr.getHashCode("(<d", 10));
+         */
+
     }
 
-    private static String removeTags(String content, int tag) {
-        String tagPattern;
-        if(tag == 1) {
-            tagPattern = "<style[^>]*>[^<]*</style>";
-        } else {
-            tagPattern = "<script[^>]*>[^<]*</script>";
-        }
+    private static String removeTags(String content, String tagPattern) {
         Pattern pattern = Pattern.compile(tagPattern);
         Matcher matcher = pattern.matcher(content);
         return matcher.replaceAll("");
@@ -100,6 +133,7 @@ public class Main {
 
         String inputLine;
         StringBuilder content = new StringBuilder();
+        int counter = 1;
         if (reader != null) {
             while((inputLine = reader.nextLine()) != null && reader.hasNextLine()) {
                 content.append(inputLine);
@@ -112,22 +146,36 @@ public class Main {
         return content.toString();
     }
 
+    private static String replacePattern(String content, String pattern, String replaceWith) {
+        Pattern regexPattern = Pattern.compile(pattern);
+        Matcher matcher = regexPattern.matcher(content);
+
+        return matcher.replaceAll(replaceWith);
+    }
+
     private static ArrayList<String> getLinks(String webContent) {
         ArrayList<String> listOfLinks = new ArrayList<>();
         String holder = "";
         int index;
+        int counter = 1;
         while((webContent.length() > listOfLinks.size() && webContent.contains("<a href="))) {
-            index = webContent.indexOf(">", webContent.indexOf("<a href=\"") + 1);
 
-            if(webContent.contains("<a href=")) {
-                holder = webContent.substring(webContent.indexOf("<a href="), webContent.indexOf("/a>", webContent.indexOf("<a href=\"")) + 3);
+            if(counter <= 10) {
+                index = webContent.indexOf(">", webContent.indexOf("<a href=\"") + 1);
+
+                if (webContent.contains("<a href=")) {
+                    holder = webContent.substring(webContent.indexOf("<a href="), webContent.indexOf("/a>", webContent.indexOf("<a href=\"")) + 3);
+                }
+
+                if (!holder.contains(".com") && holder.contains("msn")) {
+                    listOfLinks.add(holder.substring(holder.indexOf("<a href=") + 9, holder.indexOf("\"", holder.indexOf("<a href=\"") + 9)));
+                    counter++;
+                }
+
+                webContent = webContent.substring(index);
+            } else {
+                break;
             }
-
-            if(holder.contains(".com")&&holder.contains("msn")) {
-                listOfLinks.add(holder.substring(holder.indexOf("<a href=")+9,holder.indexOf("\"",holder.indexOf("<a href=\"")+9)));
-            }
-
-            webContent = webContent.substring(index);
         }
         return listOfLinks;
     }
@@ -141,5 +189,10 @@ public class Main {
             paragraphs.add(paragraph);
         }
         return paragraphs;
+    }
+
+    private static void insertInto(String word, String url) {
+        int hashValue = arrayTable.getHashCode(word, 300);
+        arrayTable.insertNode(hashValue, new Node<>(word, url));
     }
 }
