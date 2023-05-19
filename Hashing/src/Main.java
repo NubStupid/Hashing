@@ -60,7 +60,7 @@ public class Main {
         }
 
         try {
-            arrayTable.show("apa");
+            arrayTable.show("rekening");
         } catch(Exception e) {
             System.err.println("ERROR!");
             e.printStackTrace();

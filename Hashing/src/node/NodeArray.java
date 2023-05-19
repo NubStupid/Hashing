@@ -65,9 +65,11 @@ public class NodeArray<T> {
         } else {
             while(temp != null) {
                 temp = temp.getNextNode();
-                if(temp.getWord().equals(word)) {
-                    formed = String.format("%s%d\n%s%s\n%s%s\n%s%d\n", indexString, index, keyString, temp.getWord(), URLString, temp.getURL(), occurence, temp.getOccurence());
-                    break;
+                if(temp != null) {
+                    if (temp.getWord().equals(word)) {
+                        formed = String.format("%s%d\n%s%s\n%s%s\n%s%d\n", indexString, index, keyString, temp.getWord(), URLString, temp.getURL(), occurence, temp.getOccurence());
+                        break;
+                    }
                 }
             }
         }
